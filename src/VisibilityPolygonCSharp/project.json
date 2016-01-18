@@ -1,0 +1,21 @@
+﻿{
+  "version": "1.9.0-*",
+  "description": "This library can be used to construct a visibility polygon for a set of line segments. Based on the excellent https://github.com/byronknoll/visibility-polygon-js",
+  "authors": [ "Javier González Garcés" ],
+  "tags": [ "visibility, polygon, vision, portable, visibility-polygon-js" ],
+  "projectUrl": "https://github.com/xaviergonz/visibility-polygon-csharp",
+  "licenseUrl": "https://github.com/xaviergonz/visibility-polygon-csharp/blob/master/LICENSE",
+
+  "frameworks": {
+    "net451": { },
+    "dotnet5.4": {
+      "dependencies": {
+        "Microsoft.CSharp": "4.0.1-beta-23516",
+        "System.Collections": "4.0.11-beta-23516",
+        "System.Linq": "4.0.1-beta-23516",
+        "System.Runtime": "4.0.21-beta-23516",
+        "System.Threading": "4.0.11-beta-23516"
+      }
+    }
+  }
+}
