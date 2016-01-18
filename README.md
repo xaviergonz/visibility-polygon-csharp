@@ -1,4 +1,4 @@
-# VisibilityPolygonCSharp
+# VisibilityPolygonCSharp v1.9
 This library can be used to construct a visibility polygon for a set of line segments. 
 Based on the excellent https://github.com/byronknoll/visibility-polygon-js
 
@@ -54,12 +54,21 @@ The following functions should be useful:
 Example code:
 
 var polygons = [];
+
 polygons.push([[-1,-1],[501,-1],[501,501],[-1,501]]);
+
 polygons.push([[250,100],[260,140],[240,140]]);
+
 var segments = VisibilityPolygon.convertToSegments(polygons);
+
 segments = VisibilityPolygon.breakIntersections(segments);
+
 var position = [60, 60];
+
 if (VisibilityPolygon.inPolygon(position, polygons[0])) {
+
   var visibility = VisibilityPolygon.compute(position, segments);
+
 }
+
 var viewportVisibility = VisibilityPolygon.computeViewport(position, segments, [50, 50], [450, 450]);
