@@ -41,8 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IPointDouble.cs" />
+    <Compile Include="PointAdapter.cs" />
     <Compile Include="PointDouble.cs" />
+    <Compile Include="PointDoubleAdapter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Segment.cs" />
     <Compile Include="VisibilityPolygonCSharp.cs" />

@@ -1,9 +1,9 @@
 namespace VisibilityPolygonCSharp
 {
   /// <summary>
-  ///   Basic struct that holds a point with double coordinates.
+  ///   A sample basic struct that holds a point with double coordinates.
   /// </summary>
-  public struct PointDouble : IPointDouble
+  public struct PointDouble 
   {
     public double X { get; set; }
     public double Y { get; set; }

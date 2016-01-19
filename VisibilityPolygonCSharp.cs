@@ -3,20 +3,35 @@ using System.Collections.Generic;
 
 namespace VisibilityPolygonCSharp
 {
-  public static class VisibilityPolygonCSharp<TPoint> where TPoint : struct, IPointDouble
+  public class VisibilityPolygonCSharp<TPoint> where TPoint : struct
   {
-    private const double Epsilon = 0.0000001;
+    private readonly PointAdapter<TPoint> _adapter;
 
-    private static TPoint NewPoint(double x, double y)
+    public VisibilityPolygonCSharp(PointAdapter<TPoint> adapter)
     {
-      return new TPoint
-      {
-        X = x,
-        Y = y
-      };
+      if (adapter == null) throw new ArgumentNullException(nameof(adapter));
+
+      _adapter = adapter;
     }
 
-    public static List<TPoint> Compute(TPoint position, List<Segment<TPoint>> segments)
+    private const double Epsilon = 0.0000001;
+
+    private TPoint NewPoint(double x, double y)
+    {
+      return _adapter.Create(x, y);
+    }
+
+    private double X(TPoint point)
+    {
+      return _adapter.GetX(point);
+    }
+
+    private double Y(TPoint point)
+    {
+      return _adapter.GetY(point);
+    }
+
+    public List<TPoint> Compute(TPoint position, List<Segment<TPoint>> segments)
     {
       if (segments == null)
       {
@@ -24,18 +39,18 @@ namespace VisibilityPolygonCSharp
       }
 
       var bounded = new List<Segment<TPoint>>();
-      var minX = position.X;
-      var minY = position.Y;
-      var maxX = position.X;
-      var maxY = position.Y;
+      var minX = X(position);
+      var minY = Y(position);
+      var maxX = X(position);
+      var maxY = Y(position);
       for (var i = 0; i < segments.Count; ++i)
       {
         for (var j = 0; j < 2; ++j)
         {
-          minX = Math.Min(minX, segments[i][j].X);
-          minY = Math.Min(minY, segments[i][j].Y);
-          maxX = Math.Max(maxX, segments[i][j].X);
-          maxY = Math.Max(maxY, segments[i][j].Y);
+          minX = Math.Min(minX, X(segments[i][j]));
+          minY = Math.Min(minY, Y(segments[i][j]));
+          maxX = Math.Max(maxX, X(segments[i][j]));
+          maxY = Math.Max(maxY, Y(segments[i][j]));
         }
         //bounded.push([[segments[i][0][0], segments[i][0][1]], [segments[i][1][0], segments[i][1][1]]]);
         bounded.Add(new Segment<TPoint>(segments[i][0], segments[i][1]));
@@ -59,7 +74,7 @@ namespace VisibilityPolygonCSharp
       }
 
       var heap = new List<int>();
-      var start = NewPoint(position.X + 1, position.Y);
+      var start = NewPoint(X(position) + 1, Y(position));
       for (var i = 0; i < bounded.Count; ++i)
       {
         var a1 = Angle(bounded[i][0], position);
@@ -131,26 +146,26 @@ namespace VisibilityPolygonCSharp
       return polygon;
     }
 
-    public static List<TPoint> ComputeViewport(TPoint position, List<Segment<TPoint>> segments, TPoint viewportMinCorner,
+    public List<TPoint> ComputeViewport(TPoint position, List<Segment<TPoint>> segments, TPoint viewportMinCorner,
       TPoint viewportMaxCorner)
     {
       var brokenSegments = new List<Segment<TPoint>>();
       var viewport = new List<TPoint>
       {
         viewportMinCorner,
-        NewPoint(viewportMaxCorner.X, viewportMinCorner.Y),
+        NewPoint(X(viewportMaxCorner), Y(viewportMinCorner)),
         viewportMaxCorner,
-        NewPoint(viewportMinCorner.X, viewportMaxCorner.Y)
+        NewPoint(X(viewportMinCorner), Y(viewportMaxCorner))
       };
       for (var i = 0; i < segments.Count; ++i)
       {
-        if (segments[i][0].X < viewportMinCorner.X && segments[i][1].X < viewportMinCorner.X)
+        if (X(segments[i][0]) < X(viewportMinCorner) && X(segments[i][1]) < X(viewportMinCorner))
           continue;
-        if (segments[i][0].Y < viewportMinCorner.Y && segments[i][1].Y < viewportMinCorner.Y)
+        if (Y(segments[i][0]) < Y(viewportMinCorner) && Y(segments[i][1]) < Y(viewportMinCorner))
           continue;
-        if (segments[i][0].X > viewportMaxCorner.X && segments[i][1].X > viewportMaxCorner.X)
+        if (X(segments[i][0]) > X(viewportMaxCorner) && X(segments[i][1]) > X(viewportMaxCorner))
           continue;
-        if (segments[i][0].Y > viewportMaxCorner.Y && segments[i][1].Y > viewportMaxCorner.Y)
+        if (Y(segments[i][0]) > Y(viewportMaxCorner) && Y(segments[i][1]) > Y(viewportMaxCorner))
           continue;
 
         var intersections = new List<TPoint>();
@@ -162,8 +177,15 @@ namespace VisibilityPolygonCSharp
             k = 0;
           }
 
-          if (DoLineSegmentsIntersect(segments[i][0].X, segments[i][0].Y, segments[i][1].X, segments[i][1].Y,
-            viewport[j].X, viewport[j].Y, viewport[k].X, viewport[k].Y))
+          if (DoLineSegmentsIntersect(
+            X(segments[i][0]), 
+            Y(segments[i][0]),
+            X(segments[i][1]), 
+            Y(segments[i][1]),
+            X(viewport[j]), 
+            Y(viewport[j]),
+            X(viewport[k]), 
+            Y(viewport[k])))
           {
             var intersect = IntersectLines(segments[i][0], segments[i][1], viewport[j], viewport[k]);
             if (intersect == null)
@@ -215,40 +237,40 @@ namespace VisibilityPolygonCSharp
       }
       var eps = Epsilon*10.0;
       viewportSegments.Add(new Segment<TPoint>(
-        NewPoint(viewportMinCorner.X - eps, viewportMinCorner.Y - eps),
-        NewPoint(viewportMaxCorner.X + eps, viewportMinCorner.Y - eps)
+        NewPoint(X(viewportMinCorner) - eps, Y(viewportMinCorner) - eps),
+        NewPoint(X(viewportMaxCorner) + eps, Y(viewportMinCorner) - eps)
         ));
       viewportSegments.Add(new Segment<TPoint>(
-        NewPoint(viewportMaxCorner.X + eps, viewportMinCorner.Y - eps),
-        NewPoint(viewportMaxCorner.X + eps, viewportMaxCorner.Y + eps)
+        NewPoint(X(viewportMaxCorner) + eps, Y(viewportMinCorner) - eps),
+        NewPoint(X(viewportMaxCorner) + eps, Y(viewportMaxCorner) + eps))
+        );
+      viewportSegments.Add(new Segment<TPoint>(
+        NewPoint(X(viewportMaxCorner) + eps, Y(viewportMaxCorner) + eps),
+        NewPoint(X(viewportMinCorner) - eps, Y(viewportMaxCorner) + eps)
         ));
       viewportSegments.Add(new Segment<TPoint>(
-        NewPoint(viewportMaxCorner.X + eps, viewportMaxCorner.Y + eps),
-        NewPoint(viewportMinCorner.X - eps, viewportMaxCorner.Y + eps)
-        ));
-      viewportSegments.Add(new Segment<TPoint>(
-        NewPoint(viewportMinCorner.X - eps, viewportMaxCorner.Y + eps),
-        NewPoint(viewportMinCorner.X - eps, viewportMinCorner.Y - eps)
+        NewPoint(X(viewportMinCorner) - eps, Y(viewportMaxCorner) + eps),
+        NewPoint(X(viewportMinCorner) - eps, Y(viewportMinCorner) - eps)
         ));
       return Compute(position, viewportSegments);
     }
 
 
-    public static bool InViewport(TPoint position, TPoint viewportMinCorner, TPoint viewportMaxCorner)
+    public bool InViewport(TPoint position, TPoint viewportMinCorner, TPoint viewportMaxCorner)
     {
-      if (position.X < viewportMinCorner.X - Epsilon)
+      if (X(position) < X(viewportMinCorner) - Epsilon)
       {
         return false;
       }
-      if (position.Y < viewportMinCorner.Y - Epsilon)
+      if (Y(position) < Y(viewportMinCorner) - Epsilon)
       {
         return false;
       }
-      if (position.X > viewportMaxCorner.X + Epsilon)
+      if (X(position) > X(viewportMaxCorner) + Epsilon)
       {
         return false;
       }
-      if (position.Y > viewportMaxCorner.Y + Epsilon)
+      if (Y(position) > Y(viewportMaxCorner) + Epsilon)
       {
         return false;
       }
@@ -256,7 +278,7 @@ namespace VisibilityPolygonCSharp
     }
 
 
-    private static TPoint? IntersectLines(TPoint a1, TPoint a2, TPoint b1, TPoint b2)
+    private TPoint? IntersectLines(TPoint a1, TPoint a2, TPoint b1, TPoint b2)
     {
       /*
       double uaT = (b2.X - b1.X) * (a1.Y - b1.Y) - (b2.Y - b1.Y) * (a1.X - b1.X);
@@ -273,23 +295,23 @@ namespace VisibilityPolygonCSharp
       */
 
       // optimized version
-      double dbx = b2.X - b1.X, dby = b2.Y - b1.Y, dax = a2.X - a1.X, day = a2.Y - a1.Y;
+      double dbx = X(b2) - X(b1), dby = Y(b2) - Y(b1), dax = X(a2) - X(a1), day = Y(a2) - Y(a1);
       var uB = dby*dax - dbx*day;
 
       // ReSharper disable once CompareOfFloatsByEqualityOperator
       if (uB != 0.0)
       {
-        var ua = (dbx*(a1.Y - b1.Y) - dby*(a1.X - b1.X))/uB;
-        return NewPoint(a1.X - ua*-dax, a1.Y - ua*-day);
+        var ua = (dbx*(Y(a1) - Y(b1)) - dby*(X(a1) - X(b1)))/uB;
+        return NewPoint(X(a1) - ua*-dax, Y(a1) - ua*-day);
       }
       return null;
     }
 
 
-    private static double Distance(TPoint a, TPoint b)
+    private double Distance(TPoint a, TPoint b)
     {
-      var dx = a.X - b.X;
-      var dy = a.Y - b.Y;
+      var dx = X(a) - X(b);
+      var dy = Y(a) - Y(b);
       return dx*dx + dy*dy;
     }
 
@@ -338,7 +360,7 @@ namespace VisibilityPolygonCSharp
     }
 
 
-    private static double Angle2(TPoint a, TPoint b, TPoint c)
+    private double Angle2(TPoint a, TPoint b, TPoint c)
     {
       var a1 = Angle(a, b);
       var a2 = Angle(b, c);
@@ -356,7 +378,7 @@ namespace VisibilityPolygonCSharp
     }
 
 
-    private static SegmentPointAngle[] SortPoints(TPoint position, List<Segment<TPoint>> segments)
+    private SegmentPointAngle[] SortPoints(TPoint position, List<Segment<TPoint>> segments)
     {
       var segCount = segments.Count;
       var points = new SegmentPointAngle[segCount*2];
@@ -377,13 +399,13 @@ namespace VisibilityPolygonCSharp
     }
 
 
-    private static double Angle(TPoint a, TPoint b)
+    private double Angle(TPoint a, TPoint b)
     {
-      return Math.Atan2(b.Y - a.Y, b.X - a.X)*180.0/Math.PI;
+      return Math.Atan2(Y(b) - Y(a), X(b) - X(a))*180.0/Math.PI;
     }
 
 
-    private static bool Equal(TPoint? aNull, TPoint? bNull)
+    private bool Equal(TPoint? aNull, TPoint? bNull)
     {
       // fix
       if (!aNull.HasValue || !bNull.HasValue)
@@ -395,11 +417,11 @@ namespace VisibilityPolygonCSharp
       var b = bNull.Value;
       // end of fix
 
-      return Math.Abs(a.X - b.X) < Epsilon && Math.Abs(a.Y - b.Y) < Epsilon;
+      return Math.Abs(X(a) - X(b)) < Epsilon && Math.Abs(Y(a) - Y(b)) < Epsilon;
     }
 
 
-    private static bool LessThan(int index1, int index2, TPoint position, List<Segment<TPoint>> segments,
+    private bool LessThan(int index1, int index2, TPoint position, List<Segment<TPoint>> segments,
       TPoint destination)
     {
       var inter1Null = IntersectLines(segments[index1][0], segments[index1][1], position, destination);
@@ -473,18 +495,18 @@ namespace VisibilityPolygonCSharp
     }
 
 
-    public static bool InPolygon(TPoint position, List<TPoint> polygon)
+    public bool InPolygon(TPoint position, List<TPoint> polygon)
     {
       if (polygon == null)
       {
         throw new ArgumentNullException(nameof(polygon));
       }
 
-      var val = polygon[0].X;
+      var val = X(polygon[0]);
       foreach (var point in polygon)
       {
-        val = Math.Min(point.X, val);
-        val = Math.Min(point.Y, val);
+        val = Math.Min(X(point), val);
+        val = Math.Min(Y(point), val);
       }
 
       var edge = NewPoint(val - 1, val - 1);
@@ -496,8 +518,8 @@ namespace VisibilityPolygonCSharp
         {
           j = 0;
         }
-        if (DoLineSegmentsIntersect(edge.X, edge.Y, position.X, position.Y, polygon[i].X, polygon[i].Y, polygon[j].X,
-          polygon[j].Y))
+        if (DoLineSegmentsIntersect(X(edge), Y(edge), X(position), Y(position), X(polygon[i]), Y(polygon[i]), X(polygon[j]),
+          Y(polygon[j])))
         {
           // intersect should have a value if we got here
           var intersect = IntersectLines(edge, position, polygon[i], polygon[j]);
@@ -535,7 +557,7 @@ namespace VisibilityPolygonCSharp
     }
 
 
-    public static List<Segment<TPoint>> BreakIntersections(List<Segment<TPoint>> segments)
+    public List<Segment<TPoint>> BreakIntersections(List<Segment<TPoint>> segments)
     {
       var output = new List<Segment<TPoint>>();
       for (var i = 0; i < segments.Count; ++i)
@@ -547,8 +569,8 @@ namespace VisibilityPolygonCSharp
           {
             continue;
           }
-          if (DoLineSegmentsIntersect(segments[i][0].X, segments[i][0].Y, segments[i][1].X, segments[i][1].Y,
-            segments[j][0].X, segments[j][0].Y, segments[j][1].X, segments[j][1].Y))
+          if (DoLineSegmentsIntersect(X(segments[i][0]), Y(segments[i][0]), X(segments[i][1]), Y(segments[i][1]),
+            X(segments[j][0]), Y(segments[j][0]), X(segments[j][1]), Y(segments[j][1])))
           {
             var intersect = IntersectLines(segments[i][0], segments[i][1], segments[j][0], segments[j][1]);
             if (intersect == null)
@@ -604,7 +626,7 @@ namespace VisibilityPolygonCSharp
     }
 
 
-    private static void Remove(int index, List<int> heap, TPoint position, List<Segment<TPoint>> segments,
+    private void Remove(int index, List<int> heap, TPoint position, List<Segment<TPoint>> segments,
       TPoint destination,
       int[] map)
     {
@@ -669,7 +691,7 @@ namespace VisibilityPolygonCSharp
     }
 
 
-    private static void Insert(int index, List<int> heap, TPoint position, List<Segment<TPoint>> segments,
+    private void Insert(int index, List<int> heap, TPoint position, List<Segment<TPoint>> segments,
       TPoint destination,
       int[] map)
     {
