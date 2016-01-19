@@ -2,6 +2,8 @@
 This library can be used to construct a visibility polygon for a set of line segments. 
 Based on the excellent https://github.com/byronknoll/visibility-polygon-js
 
+NuGet package: https://www.nuget.org/packages/VisibilityPolygonCSharp/1.9.0
+
 This code is released into under the MIT License. Check the LICENSE file for details.
 Original library made by Byron Knoll.
 C# Port made by Javier González Garcés.
