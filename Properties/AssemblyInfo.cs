@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("VisibilityPolygonCSharp")]
 [assembly: AssemblyDescription("This library can be used to construct a visibility polygon for a set of line segments. Based on the excellent https://github.com/byronknoll/visibility-polygon-js")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Javier González Garcés")]
 [assembly: AssemblyProduct("VisibilityPolygonCSharp")]
 [assembly: AssemblyCopyright("Copyright © 2016 Javier González Garcés")]
 [assembly: AssemblyTrademark("")]
