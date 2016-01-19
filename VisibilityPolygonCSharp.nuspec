@@ -11,7 +11,7 @@
     <!--<iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl>-->
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
-    <releaseNotes>First release.</releaseNotes>
+    <releaseNotes>Added withOutput methods to reuse collections.</releaseNotes>
     <copyright>Copyright © 2016 Javier González Garcés</copyright>
     <tags>polygon, visibility</tags>
   </metadata>
